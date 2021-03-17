@@ -1,0 +1,13 @@
+{
+    "start_line": 13,
+    "headers": [
+        "Date",
+        "Value date",
+        "Description",
+        "₪ Credit/debit ",
+        "₪ Balance ",
+        "Reference",
+        "Commission",
+        "Channel"
+    ]
+}
