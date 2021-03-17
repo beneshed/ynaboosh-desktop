@@ -8,26 +8,29 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/thebenwaters/ynab-desktop-importer/internal/pkg/ynabimporter"
 )
 
-type uploadState struct {
+type InternalState ynabimporter.GlobalState
+
+type UploadState struct {
 	fileToUpload *string
 	ynabAccount  *string
 	uploadType   string
 }
 
-func NewUploadState() *uploadState {
-	return &uploadState{}
+func NewUploadState() *UploadState {
+	return &UploadState{}
 }
 
-func (s uploadState) Validate() bool {
+func (s UploadState) Validate() bool {
 	if s.fileToUpload == nil || s.ynabAccount == nil {
 		return false
 	}
 	return true
 }
 
-func fetchAccountsForSelector(accounts []Account) []string {
+func fetchAccountsForSelector(accounts []ynabimporter.Account) []string {
 	var results []string
 	for _, account := range accounts {
 		if !account.Deleted && !account.Closed {
@@ -38,7 +41,7 @@ func fetchAccountsForSelector(accounts []Account) []string {
 	return results
 }
 
-func (s GlobalState) newUploadFlow(w fyne.Window) *fyne.Container {
+func (s InternalState) NewUploadFlow(w fyne.Window) *fyne.Container {
 	state := NewUploadState()
 	fileSelected := widget.NewLabel("")
 	fileLabel := widget.NewButton("File to Upload", func() {
@@ -51,7 +54,7 @@ func (s GlobalState) newUploadFlow(w fyne.Window) *fyne.Container {
 
 	})
 	accountSelectLabel := widget.NewLabel("YNAB Account")
-	var accountsToQuery []Account
+	var accountsToQuery []ynabimporter.Account
 	results := s.DB.Find(&accountsToQuery)
 	if results.Error != nil {
 		log.Println(results.Error)

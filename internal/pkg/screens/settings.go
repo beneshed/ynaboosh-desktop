@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/browser"
+	"github.com/thebenwaters/ynab-desktop-importer/internal/pkg/ynabimporter"
 	"go.bmvs.io/ynab"
 )
 
@@ -51,7 +52,9 @@ var (
 	expiresIn   string
 )
 
-func login(s GlobalState) {
+type InternalState ynabimporter.GlobalState
+
+func login(s InternalState) {
 	urlToOpen := fmt.Sprintf("https://app.youneedabudget.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=token", oauthClientID, redirectURL)
 	ctx, cancel := context.WithCancel(context.Background())
 	e := echo.New()
@@ -67,14 +70,14 @@ func login(s GlobalState) {
 		expiresIn = m["expires"].(string)
 		expiresInInt, _ := strconv.Atoi(expiresIn)
 		// get setting
-		var setting Setting
+		var setting ynabimporter.Setting
 		result := s.DB.First(&setting)
 		now := time.Now().UTC()
 		if result.Error != nil {
-			newSetting := Setting{
+			newSetting := ynabimporter.Setting{
 				AccessToken: &accessToken,
 				ExpiresOn:   now.Add(time.Second * time.Duration(expiresInInt)),
-				Model: Model{
+				Model: ynabimporter.Model{
 					CreatedOn: now,
 					UpdatedOn: now,
 				},
@@ -92,19 +95,19 @@ func login(s GlobalState) {
 			s.YNABClient = ynab.NewClient(accessToken)
 			s.DB.Save(&setting)
 		}
-		var accountsToInsert []Account
+		var accountsToInsert []ynabimporter.Account
 		accounts, err := s.YNABClient.Account().GetAccounts("default")
 		if err != nil {
 			log.Println(err)
 		}
 		for _, account := range accounts {
-			accountsToInsert = append(accountsToInsert, Account{
+			accountsToInsert = append(accountsToInsert, ynabimporter.Account{
 				YNABID:  account.ID,
 				Name:    account.Name,
 				Type:    string(account.Type),
 				Closed:  account.Closed,
 				Deleted: account.Deleted,
-				Model: Model{
+				Model: ynabimporter.Model{
 					CreatedOn: now,
 					UpdatedOn: now,
 				},
@@ -115,10 +118,10 @@ func login(s GlobalState) {
 		if err != nil {
 			log.Println(err)
 		}
-		var categoriesToCreate []Category
+		var categoriesToCreate []ynabimporter.Category
 		for _, group := range categories {
 			for _, c := range group.Categories {
-				categoriesToCreate = append(categoriesToCreate, Category{
+				categoriesToCreate = append(categoriesToCreate, ynabimporter.Category{
 					YNABGroupID:    group.ID,
 					GroupName:      group.Name,
 					GroupHidden:    group.Hidden,
@@ -127,7 +130,7 @@ func login(s GlobalState) {
 					Name:           c.Name,
 					Hidden:         c.Hidden,
 					Deleted:        c.Deleted,
-					Model: Model{
+					Model: ynabimporter.Model{
 						CreatedOn: now,
 						UpdatedOn: now,
 					},
@@ -150,7 +153,7 @@ func login(s GlobalState) {
 	}
 }
 
-func (s GlobalState) NewSettingsScreen() *fyne.Container {
+func (s InternalState) NewSettingsScreen() *fyne.Container {
 	loginButton := widget.NewButton("Login to YNAB", func() {
 		login(s)
 	})

@@ -3,6 +3,6 @@ package ynabimporter
 type Language string
 
 const (
-	hebrew  Language = "he"
-	english Language = "en"
+	Hebrew  Language = "he"
+	English Language = "en"
 )
