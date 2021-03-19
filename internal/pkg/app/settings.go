@@ -1,4 +1,4 @@
-package screens
+package app
 
 import (
 	"context"
@@ -8,12 +8,10 @@ import (
 	"strconv"
 	"time"
 
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/browser"
-	"github.com/thebenwaters/ynab-desktop-importer/internal/pkg/ynabimporter"
 	"go.bmvs.io/ynab"
 )
 
@@ -52,9 +50,7 @@ var (
 	expiresIn   string
 )
 
-type InternalState ynabimporter.GlobalState
-
-func login(s InternalState) {
+func login(s GlobalState) {
 	urlToOpen := fmt.Sprintf("https://app.youneedabudget.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=token", oauthClientID, redirectURL)
 	ctx, cancel := context.WithCancel(context.Background())
 	e := echo.New()
@@ -70,14 +66,14 @@ func login(s InternalState) {
 		expiresIn = m["expires"].(string)
 		expiresInInt, _ := strconv.Atoi(expiresIn)
 		// get setting
-		var setting ynabimporter.Setting
+		var setting Setting
 		result := s.DB.First(&setting)
 		now := time.Now().UTC()
 		if result.Error != nil {
-			newSetting := ynabimporter.Setting{
+			newSetting := Setting{
 				AccessToken: &accessToken,
 				ExpiresOn:   now.Add(time.Second * time.Duration(expiresInInt)),
-				Model: ynabimporter.Model{
+				Model: Model{
 					CreatedOn: now,
 					UpdatedOn: now,
 				},
@@ -95,19 +91,19 @@ func login(s InternalState) {
 			s.YNABClient = ynab.NewClient(accessToken)
 			s.DB.Save(&setting)
 		}
-		var accountsToInsert []ynabimporter.Account
+		var accountsToInsert []Account
 		accounts, err := s.YNABClient.Account().GetAccounts("default")
 		if err != nil {
 			log.Println(err)
 		}
 		for _, account := range accounts {
-			accountsToInsert = append(accountsToInsert, ynabimporter.Account{
+			accountsToInsert = append(accountsToInsert, Account{
 				YNABID:  account.ID,
 				Name:    account.Name,
 				Type:    string(account.Type),
 				Closed:  account.Closed,
 				Deleted: account.Deleted,
-				Model: ynabimporter.Model{
+				Model: Model{
 					CreatedOn: now,
 					UpdatedOn: now,
 				},
@@ -118,10 +114,10 @@ func login(s InternalState) {
 		if err != nil {
 			log.Println(err)
 		}
-		var categoriesToCreate []ynabimporter.Category
+		var categoriesToCreate []Category
 		for _, group := range categories {
 			for _, c := range group.Categories {
-				categoriesToCreate = append(categoriesToCreate, ynabimporter.Category{
+				categoriesToCreate = append(categoriesToCreate, Category{
 					YNABGroupID:    group.ID,
 					GroupName:      group.Name,
 					GroupHidden:    group.Hidden,
@@ -130,7 +126,7 @@ func login(s InternalState) {
 					Name:           c.Name,
 					Hidden:         c.Hidden,
 					Deleted:        c.Deleted,
-					Model: ynabimporter.Model{
+					Model: Model{
 						CreatedOn: now,
 						UpdatedOn: now,
 					},
@@ -153,15 +149,27 @@ func login(s InternalState) {
 	}
 }
 
-func (s InternalState) NewSettingsScreen() *fyne.Container {
-	loginButton := widget.NewButton("Login to YNAB", func() {
-		login(s)
-	})
-	logoutButton := widget.NewButton("Logout of YNAB", func() {
-		log.Println("tapped")
-	})
-	refreshCategoriesButton := widget.NewButton("Refresh YNAB Categories", func() {
-		log.Println("tapped")
-	})
-	return container.NewVBox(loginButton, logoutButton, refreshCategoriesButton)
+func (s GlobalState) NewSettingsScreen() *Component {
+	/*
+		loginButton := widget.NewButton("Login to YNAB", func() {
+			login(s)
+		})
+		logoutButton := widget.NewButton("Logout of YNAB", func() {
+			log.Println("tapped")
+		})
+		refreshCategoriesButton := widget.NewButton("Refresh YNAB Categories", func() {
+			log.Println("tapped")
+		})
+		log.Println(loginButton, logoutButton)
+		return NewComponent(
+			container.NewVBox(loginButton, logoutButton, refreshCategoriesButton),
+		)
+	*/
+	return NewComponent(
+		container.NewMax(container.NewVBox(widget.NewButton("beep boop bop", func() {
+			log.Println("tapped")
+		}), widget.NewButton("beep boop bop", func() {
+			log.Println("tapped")
+		}))),
+	)
 }

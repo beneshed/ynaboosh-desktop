@@ -1,4 +1,4 @@
-package ynabimporter
+package app
 
 type Language string
 
