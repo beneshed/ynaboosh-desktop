@@ -7,8 +7,6 @@ import (
 	"log"
 	"regexp"
 	"strconv"
-	"strings"
-	"time"
 
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
@@ -73,12 +71,7 @@ func ParseCalTransations(fileName string) []Transaction {
 		for index, col := range entry {
 			switch index {
 			case 0:
-				log.Println("should be date", col)
-				t := strings.Split(col, "/")
-				day, _ := strconv.Atoi(t[0])
-				month, _ := strconv.Atoi(t[1])
-				year, _ := strconv.Atoi(t[2])
-				transaction.DateOfTransaction = time.Date(year+2000, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+				transaction.DateOfTransaction = parseSlashedDate(col, nil)
 			case 1:
 				payee := col
 				if detectHebrew(col) {

@@ -6,7 +6,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/antchfx/htmlquery"
 )
@@ -32,10 +31,7 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 	}
 	var transactions []Transaction
 	for i := 0; i < len(results); i += 6 {
-		dateParsed := strings.Split(htmlquery.InnerText(results[i]), "/")
-		day, _ := strconv.Atoi(strings.TrimSpace(dateParsed[0]))
-		month, _ := strconv.Atoi(strings.TrimSpace(dateParsed[1]))
-		year, _ := strconv.Atoi(strings.TrimSpace(dateParsed[2]))
+		date := parseSlashedDate(htmlquery.InnerText(results[i]), nil)
 		payee := strings.TrimSpace(htmlquery.InnerText(results[i+1]))
 		if detectHebrew(payee) {
 			payee = reverse(payee)
@@ -46,7 +42,6 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 		if out > 0 {
 			isOut = true
 		}
-		date := time.Date(year+2000, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 		transactions = append(transactions, Transaction{
 			DateOfTransaction: date,
 			Payee:             payee,

@@ -6,7 +6,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
 	"github.com/thebenwaters/ynab-utils-desktop/institutions"
 
 	"fyne.io/fyne/v2"
@@ -189,7 +188,7 @@ func main() {
 			}),
 		),
 		widget.NewFormItem(
-			"File Type", widget.NewSelect([]string{"Discount Bank - Hebrew", "Leumi", "Cal"}, func(value string) {
+			"File Type", widget.NewSelect([]string{"Discount Bank - Hebrew", "Discount Bank - English", "Leumi", "Cal"}, func(value string) {
 				fileType = value
 			}),
 		),
@@ -222,14 +221,8 @@ func main() {
 		case "Leumi":
 			leumiTransactions := institutions.ParseLeumiTransactions(fileName)
 			log.Println(leumiTransactions)
-		case "Discount":
-			f, err := excelize.OpenFile(fileName)
-			if err != nil {
-				log.Panicln(err)
-			}
-			for index, name := range f.GetSheetMap() {
-				log.Println(index, name)
-			}
+		case "Discount Bank - Hebrew":
+			log.Println(institutions.ParseDiscountTransactions(fileName, true))
 		default:
 			log.Println("SHIT")
 		}
