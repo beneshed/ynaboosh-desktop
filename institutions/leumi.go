@@ -31,7 +31,7 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 	}
 	var transactions []Transaction
 	for i := 0; i < len(results); i += 6 {
-		date := parseSlashedDate(htmlquery.InnerText(results[i]), nil)
+		date := parseSlashedDate(htmlquery.InnerText(results[i]), nil, true)
 		payee := strings.TrimSpace(htmlquery.InnerText(results[i+1]))
 		if detectHebrew(payee) {
 			payee = reverse(payee)

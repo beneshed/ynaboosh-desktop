@@ -1,10 +1,7 @@
 package main
 
 import (
-	"embed"
-	"encoding/json"
 	"log"
-	"strings"
 
 	"github.com/thebenwaters/ynab-utils-desktop/institutions"
 
@@ -23,16 +20,8 @@ import (
 var (
 	boundFileSelected binding.String
 	fileType          string = "NONE"
-	//go:embed assets/*.json
-	assets embed.FS
+	transactions      []institutions.Transaction
 )
-
-type Asset struct {
-	StartingLine int      `json:"starting_line"`
-	Headers      []string `json:"headers"`
-	DateFormat   string   `json:"date_format"`
-	Format       string   `json:"format"`
-}
 
 type MappedTableRow struct {
 	Date     string `fyne:"Date of Transaction"`
@@ -155,19 +144,6 @@ func main() {
 	boundFileSelected.Set("")
 	myApp := app.New()
 	myWindow := myApp.NewWindow("YNAB Desktop Importer")
-	packagedAssetsSlice, err := assets.ReadDir("assets")
-	if err != nil {
-		log.Println(err)
-	}
-	for _, a := range packagedAssetsSlice {
-		f, err := assets.ReadFile(strings.Join([]string{"assets", a.Name()}, "/"))
-		if err != nil {
-			log.Println(err)
-		}
-		var unmarshaledAsset Asset
-		json.Unmarshal(f, &unmarshaledAsset)
-		log.Println(unmarshaledAsset)
-	}
 
 	filePicker := dialog.NewFileOpen(func(info fyne.URIReadCloser, err error) {
 		log.Println(info, err)
@@ -188,7 +164,7 @@ func main() {
 			}),
 		),
 		widget.NewFormItem(
-			"File Type", widget.NewSelect([]string{"Discount Bank - Hebrew", "Discount Bank - English", "Leumi", "Cal"}, func(value string) {
+			"File Type", widget.NewSelect([]string{"Discount Bank - Hebrew", "Discount Bank - English", "Leumi", "Cal", "Max"}, func(value string) {
 				fileType = value
 			}),
 		),
@@ -219,10 +195,11 @@ func main() {
 				r.LazyQuotes = true
 			*/
 		case "Leumi":
-			leumiTransactions := institutions.ParseLeumiTransactions(fileName)
-			log.Println(leumiTransactions)
+			transactions = append(transactions, institutions.ParseLeumiTransactions(fileName)...)
 		case "Discount Bank - Hebrew":
-			log.Println(institutions.ParseDiscountTransactions(fileName, true))
+			transactions = append(transactions, institutions.ParseDiscountTransactions(fileName, true)...)
+		case "Max":
+			transactions = append(transactions, institutions.ParseMaxTransations(fileName)...)
 		default:
 			log.Println("SHIT")
 		}
@@ -247,7 +224,7 @@ func main() {
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Sync Transactions", syncContainer),
-		container.NewTabItem("Mappings", mappings),
+		container.NewTabItem("Rules", mappings),
 		container.NewTabItem("Settings", settingsContainer),
 	)
 

@@ -71,7 +71,7 @@ func ParseCalTransations(fileName string) []Transaction {
 		for index, col := range entry {
 			switch index {
 			case 0:
-				transaction.DateOfTransaction = parseSlashedDate(col, nil)
+				transaction.DateOfTransaction = parseSlashedDate(col, nil, true)
 			case 1:
 				payee := col
 				if detectHebrew(col) {

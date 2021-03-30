@@ -28,19 +28,23 @@ func ParseDiscountTransactions(fileName string, isHebrew bool) []Transaction {
 		if len(row) == len(headers) {
 			adjustedAmount := strings.ReplaceAll(row[3], ",", "")
 			amountDecimal, err := strconv.ParseFloat(adjustedAmount, 32)
+			amountDecimalWrapped := float32(amountDecimal)
 			if err != nil {
 				log.Panicln(err)
 			}
-			log.Println(row[0])
 			payee := row[2]
 			if detectHebrew(payee) {
 				payee = reverse(payee)
 			}
+			postiveAmount := amountDecimalWrapped
+			if amountDecimalWrapped < 0.0 {
+				postiveAmount = amountDecimalWrapped * -1.0
+			}
 			transactions = append(transactions, Transaction{
-				DateOfTransaction: parseSlashedDate(row[0], &weirdDate),
+				DateOfTransaction: parseSlashedDate(row[0], &weirdDate, false),
 				Payee:             payee,
-				Amount:            float32(amountDecimal) * -1.0,
-				Out:               float32(amountDecimal) > 0.0,
+				Amount:            postiveAmount,
+				Out:               amountDecimalWrapped < 0.0,
 			})
 		}
 	}
