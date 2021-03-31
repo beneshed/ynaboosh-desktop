@@ -154,6 +154,8 @@ func main() {
 		}
 	}, myWindow)
 
+	transactionTable := NewTransactionTable()
+
 	// sync transactions
 	// 1) form
 	// 2) adjust / fix / confirm
@@ -183,32 +185,27 @@ func main() {
 		if err != nil {
 			log.Panicln(err)
 		}
+		log.Println("About to parse")
 		switch fileType {
 		case "Cal":
-			calTransactions := institutions.ParseCalTransations(fileName)
-			log.Println(calTransactions)
-			/*
-				r := csv.NewReader(strings.NewReader(strings.Join(lines[2:], "\n")))
-
-				r.Comma = '\t'
-				r.FieldsPerRecord = -1
-				r.LazyQuotes = true
-			*/
+			transactions := institutions.ParseCalTransations(fileName)
+			transactionTable.AddTransactions(transactions)
 		case "Leumi":
 			transactions = append(transactions, institutions.ParseLeumiTransactions(fileName)...)
+			transactionTable.AddTransactions(transactions)
 		case "Discount Bank - Hebrew":
 			transactions = append(transactions, institutions.ParseDiscountTransactions(fileName, true)...)
+			transactionTable.AddTransactions(transactions)
 		case "Max":
 			transactions = append(transactions, institutions.ParseMaxTransations(fileName)...)
-		default:
-			log.Println("SHIT")
+			transactionTable.AddTransactions(transactions)
 		}
 	}
 	form.SubmitText = "Load File"
 
 	mappings := container.NewBorder(nil, container.NewMax(widget.NewButton("Next", func() { log.Println("test") })), nil, nil, NewMappedTable())
 
-	syncContainer := container.NewBorder(form, widget.NewButton("Submit to YNAB", func() {}), nil, nil, NewMappedTable())
+	syncContainer := container.NewBorder(form, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
 
 	settingsContainer := container.NewVBox(
 		widget.NewButton("Login to YNAB", func() {

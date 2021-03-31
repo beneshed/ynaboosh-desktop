@@ -1,6 +1,7 @@
 package institutions
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -21,11 +22,21 @@ func (i Institution) String() string {
 }
 
 type Transaction struct {
-	DateOfTransaction time.Time
-	Payee             string
+	DateOfTransaction time.Time `ynab:"Date of Transaction"`
+	Payee             string    `ynab:"Payee"`
 	CurrencyCode      string
-	Amount            float32
+	Amount            float32 `ynab:"Amount"`
 	Out               bool
+	Approved          bool `ynab:"Approved"`
+}
+
+func (t Transaction) GetTransactionAsMap() map[string]string {
+	return map[string]string{
+		"Date of Transaction": t.DateOfTransaction.Format("January 2, 2006"),
+		"Payee":               t.Payee,
+		"Amount":              fmt.Sprintf("%.2f", t.Amount),
+		"Approved":            strconv.FormatBool(t.Approved),
+	}
 }
 
 func NewTransation() *Transaction {

@@ -11,10 +11,9 @@ import (
 
 func parseMaxDate(date string) time.Time {
 	dateParsed := strings.Split(date, "-")
-	day, _ := strconv.Atoi(strings.TrimSpace(dateParsed[1]))
-	month, _ := strconv.Atoi(strings.TrimSpace(dateParsed[0]))
+	day, _ := strconv.Atoi(strings.TrimSpace(dateParsed[0]))
+	month, _ := strconv.Atoi(strings.TrimSpace(dateParsed[1]))
 	year, _ := strconv.Atoi(strings.TrimSpace(dateParsed[2]))
-	log.Println(day, month, year)
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 }
 
