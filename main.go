@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/thebenwaters/ynab-utils-desktop/institutions"
+	"github.com/thebenwaters/ynab-utils-desktop/utils"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -21,6 +22,16 @@ var (
 	boundFileSelected binding.String
 	fileType          string = "NONE"
 	transactions      []institutions.Transaction
+)
+
+const (
+	exampleRule = `rule SpeedUp "When testcar is speeding up we keep increase the speed." salience 10  {
+		when
+			TestCar.SpeedUp == true && TestCar.Speed < TestCar.MaxSpeed
+		then
+			TestCar.Speed = TestCar.Speed + TestCar.SpeedIncrement;
+			DistanceRecord.TotalDistance = DistanceRecord.TotalDistance + TestCar.Speed;
+	}`
 )
 
 type MappedTableRow struct {
@@ -154,7 +165,7 @@ func main() {
 		}
 	}, myWindow)
 
-	transactionTable := NewTransactionTable()
+	transactionTable := utils.NewTransactionTable()
 
 	// sync transactions
 	// 1) form
@@ -202,10 +213,26 @@ func main() {
 		}
 	}
 	form.SubmitText = "Load File"
+	topContainer := container.NewVBox(form, container.NewHBox(widget.NewButton("Approve All", func() {
+		transactionTable.ApprovedSetAll(true)
+	}), widget.NewButton("Unapprove All", func() {
+		transactionTable.ApprovedSetAll(false)
+	})))
 
-	mappings := container.NewBorder(nil, container.NewMax(widget.NewButton("Next", func() { log.Println("test") })), nil, nil, NewMappedTable())
+	ruleEntry := widget.NewMultiLineEntry()
+	ruleEntry.SetPlaceHolder(exampleRule)
 
-	syncContainer := container.NewBorder(form, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
+	createRuleForm := widget.NewForm(
+		widget.NewFormItem("Rule Name", widget.NewEntry()),
+		widget.NewFormItem("Rule", ruleEntry),
+	)
+	createRuleForm.OnSubmit = func() {
+		ruleEntry.SetText("")
+	}
+
+	mappings := container.NewVBox(createRuleForm, widget.NewSeparator(), widget.NewLabelWithStyle("Rules", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}))
+
+	syncContainer := container.NewBorder(topContainer, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
 
 	settingsContainer := container.NewVBox(
 		widget.NewButton("Login to YNAB", func() {
@@ -214,7 +241,7 @@ func main() {
 		widget.NewButton("Logout of YNAB", func() {
 			log.Println("tapped")
 		}),
-		widget.NewButton("Refresh YNAB Categories", func() {
+		widget.NewButton("Refresh YNAB Data", func() {
 			log.Println("refreshed")
 		}),
 	)

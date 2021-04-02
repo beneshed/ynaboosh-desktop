@@ -15,9 +15,7 @@ func ParseDiscountTransactions(fileName string, isHebrew bool) []Transaction {
 		log.Panicln(err)
 	}
 	sheets := f.GetSheetList()
-	log.Println("Sheets", sheets)
 	sheet := sheets[0]
-	log.Println(sheet)
 	rows, err := f.GetRows(sheet)
 	if err != nil {
 		log.Println(err)

@@ -24,7 +24,6 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 	if err != nil {
 		log.Panicln(err)
 	}
-	log.Println(doc)
 	results, err := htmlquery.QueryAll(doc, leumiTableXPath)
 	if err != nil {
 		log.Println(err)

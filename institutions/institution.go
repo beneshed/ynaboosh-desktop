@@ -35,7 +35,8 @@ func (t Transaction) GetTransactionAsMap() map[string]string {
 		"Date of Transaction": t.DateOfTransaction.Format("January 2, 2006"),
 		"Payee":               t.Payee,
 		"Amount":              fmt.Sprintf("%.2f", t.Amount),
-		"Approved":            strconv.FormatBool(t.Approved),
+		//"Approved":            strconv.FormatBool(t.Approved),
+		"Approved": "",
 	}
 }
 
