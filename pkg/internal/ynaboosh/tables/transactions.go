@@ -1,4 +1,4 @@
-package extensions
+package tables
 
 import (
 	"errors"
@@ -15,9 +15,8 @@ const (
 )
 
 type internalTransactionTable struct {
-	headers        []string
-	maxHeadersSize []int
-	data           map[int]*models.Transaction
+	headers []string
+	data    map[int]*models.Transaction
 }
 
 type wrappedUncheckedIcon struct {
@@ -45,6 +44,9 @@ func newWrappedCheckedIcon() *wrappedCheckedIcon {
 }
 
 func (t *internalTransactionTable) Length() (int, int) {
+	if len(t.data) == 0 {
+		return 1, len(t.headers)
+	}
 	return len(t.data), len(t.headers)
 }
 
@@ -80,21 +82,30 @@ func (t *internalTransactionTable) update(location widget.TableCellID, cell fyne
 				typedObj.SetText(value)
 			}
 		case *wrappedUncheckedIcon:
-			row, _ := t.getHeaders()
-			header := row[location.Col]
-			if header == "Approved" && !t.data[location.Row].Approved && location.Row > 0 {
-				typedObj.Show()
+			if location.Row > 0 {
+				row, _ := t.getHeaders()
+				header := row[location.Col]
+				if header == "Approved" && !t.data[location.Row].Approved {
+					typedObj.Show()
+				} else {
+					typedObj.Hide()
+				}
 			} else {
 				typedObj.Hide()
 			}
 		case *wrappedCheckedIcon:
-			row, _ := t.getHeaders()
-			header := row[location.Col]
-			if header == "Approved" && t.data[location.Row].Approved && location.Row > 0 {
-				typedObj.Show()
+			if location.Row > 0 {
+				row, _ := t.getHeaders()
+				header := row[location.Col]
+				if header == "Approved" && t.data[location.Row].Approved {
+					typedObj.Show()
+				} else {
+					typedObj.Hide()
+				}
 			} else {
 				typedObj.Hide()
 			}
+
 		}
 	}
 }
@@ -105,7 +116,6 @@ type TransactionTable struct {
 }
 
 func NewTransactionTable() *TransactionTable {
-
 	internal := internalTransactionTable{
 		data:    make(map[int]*models.Transaction),
 		headers: []string{"Date of Transaction", "Payee", "Amount", "Category", "Approved", "Rule Detected"},
@@ -120,11 +130,33 @@ func NewTransactionTable() *TransactionTable {
 }
 
 func (t *TransactionTable) OnSelected(id widget.TableCellID) {
-	if id.Row > 0 && id.Col == 4 {
-		t.internal.data[id.Row].Approved = !t.internal.data[id.Row].Approved
-		t.Refresh()
-		return
+	if len(t.internal.data) > 0 {
+		if id.Row > 0 && id.Col == 4 {
+			t.internal.data[id.Row].Approved = !t.internal.data[id.Row].Approved
+			t.Refresh()
+			return
+		}
 	}
+}
+
+func (t TransactionTable) GetHeaders() ([]string, error) {
+	return t.internal.getHeaders()
+}
+
+func (t *TransactionTable) WrapTableWidth() {
+	var maxDateWidth float32 = fyne.MeasureText(t.internal.headers[0], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxPayeeWidth float32 = fyne.MeasureText(t.internal.headers[1], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxAmountWidth float32 = fyne.MeasureText(t.internal.headers[2], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxCategoryWidth float32 = fyne.MeasureText(t.internal.headers[3], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxRuleDetectedWidth float32 = fyne.MeasureText(t.internal.headers[5], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxApprovedWidth float32 = fyne.MeasureText(t.internal.headers[4], theme.TextSize(), fyne.TextStyle{}).Width
+	t.Table.SetColumnWidth(0, maxDateWidth+roundPad)
+	t.Table.SetColumnWidth(1, maxPayeeWidth+roundPad)
+	t.Table.SetColumnWidth(2, maxAmountWidth+roundPad)
+	t.Table.SetColumnWidth(3, maxCategoryWidth+roundPad)
+	t.Table.SetColumnWidth(4, maxApprovedWidth+roundPad)
+	t.Table.SetColumnWidth(5, maxRuleDetectedWidth+roundPad)
+	t.Table.Refresh()
 }
 
 func (t *TransactionTable) AddTransactions(transactions []models.Transaction) {
@@ -167,6 +199,7 @@ func (t *TransactionTable) AddTransactions(transactions []models.Transaction) {
 	t.Table.SetColumnWidth(4, maxApprovedWidth+roundPad)
 	t.Table.SetColumnWidth(5, maxRuleDetectedWidth+roundPad)
 	t.Table.Refresh()
+
 }
 
 func (t *TransactionTable) ApprovedSetAll(approved bool) {

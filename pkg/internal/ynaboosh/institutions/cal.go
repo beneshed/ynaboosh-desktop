@@ -92,6 +92,7 @@ func (i Cal) ParseTransactions(fileName string) []models.Transaction {
 			case 1:
 				payee := col
 				if detectHebrew(col) {
+					transaction.ReversePayee = col
 					payee = reverse(col)
 				}
 				transaction.Payee = payee

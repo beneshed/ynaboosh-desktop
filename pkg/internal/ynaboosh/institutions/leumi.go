@@ -44,7 +44,9 @@ func (i Leumi) ParseTransactions(fileName string) []models.Transaction {
 	for i := 0; i < len(results); i += 6 {
 		date := parseSlashedDate(htmlquery.InnerText(results[i]), nil, true)
 		payee := strings.TrimSpace(htmlquery.InnerText(results[i+1]))
+		reversedPayee := ""
 		if detectHebrew(payee) {
+			reversedPayee = payee
 			payee = reverse(payee)
 		}
 		isOut := false
@@ -56,6 +58,7 @@ func (i Leumi) ParseTransactions(fileName string) []models.Transaction {
 		transactions = append(transactions, models.Transaction{
 			DateOfTransaction: date,
 			Payee:             payee,
+			ReversePayee:      reversedPayee,
 			CurrencyCode:      "nis",
 			Amount:            float32(math.Max(out, in)),
 			Out:               isOut,

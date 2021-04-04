@@ -14,6 +14,14 @@ func InitializeDB(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+	err = db.AutoMigrate(&models.Rule{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&models.Transaction{})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

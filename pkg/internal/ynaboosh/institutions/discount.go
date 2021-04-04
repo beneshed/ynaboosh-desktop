@@ -47,7 +47,9 @@ func (i Discount) ParseTransactions(fileName string) []models.Transaction {
 				log.Panicln(err)
 			}
 			payee := row[2]
+			reversedPayee := ""
 			if detectHebrew(payee) {
+				reversedPayee = payee
 				payee = reverse(payee)
 			}
 			postiveAmount := amountDecimalWrapped
@@ -57,6 +59,7 @@ func (i Discount) ParseTransactions(fileName string) []models.Transaction {
 			transactions = append(transactions, models.Transaction{
 				DateOfTransaction: parseSlashedDate(row[0], &weirdDate, false),
 				Payee:             payee,
+				ReversePayee:      reversedPayee,
 				Amount:            postiveAmount,
 				Out:               amountDecimalWrapped < 0.0,
 			})

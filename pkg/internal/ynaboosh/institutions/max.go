@@ -49,7 +49,9 @@ func parseSheet(f *excelize.File, sheetName string) []models.Transaction {
 				log.Panicln(err)
 			}
 			payee := row[1]
+			reversedPayee := ""
 			if detectHebrew(payee) {
+				reversedPayee = payee
 				payee = reverse(payee)
 			}
 			postiveAmount := amountDecimalWrapped
@@ -59,6 +61,7 @@ func parseSheet(f *excelize.File, sheetName string) []models.Transaction {
 			transactions = append(transactions, models.Transaction{
 				DateOfTransaction: parseMaxDate(row[0]),
 				Payee:             payee,
+				ReversePayee:      reversedPayee,
 				Amount:            postiveAmount,
 				Out:               amountDecimalWrapped < 0.0,
 			})

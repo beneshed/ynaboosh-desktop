@@ -2,18 +2,20 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
 type Transaction struct {
-	DateOfTransaction time.Time `sql:"unique_index:idx_date_payee_amount"`
+	DateOfTransaction time.Time `gorm:"uniqueIndex:idx_unique_transaction"`
 	Category          string
 	SubCategory       string
 	RuleDetected      *string
-	Payee             string `sql:"unique_index:idx_date_payee_amount"`
+	Payee             string `gorm:"uniqueIndex:idx_unique_transaction"`
+	ReversePayee      string
 	CurrencyCode      string
-	Amount            float32 `sql:"unique_index:idx_date_payee_amoutn"`
-	Out               bool
+	Amount            float32 `gorm:"uniqueIndex:idx_unique_transaction"`
+	Out               bool    `gorm:"uniqueIndex:idx_unique_transaction"`
 	Approved          bool
 	Model
 }
@@ -35,6 +37,8 @@ func (t Transaction) GetTransactionAsMap() map[string]string {
 	}
 }
 
-func NewTransation() *Transaction {
-	return &Transaction{}
+func (m *DBManager) InsertTransactions(transactions []Transaction) error {
+	result := m.Create(&transactions)
+	log.Println(result)
+	return result.Error
 }

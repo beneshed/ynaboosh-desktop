@@ -7,6 +7,7 @@ import (
 
 	"fyne.io/fyne/v2/widget"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/extensions"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
 const (
@@ -30,10 +31,23 @@ type RawRule struct {
 	Description string
 	When        string
 	Then        string
-	Priority    int
+	Priority    int64
 }
 
-func NewRuleEditForm() *extensions.ClearableForm {
+func (r RawRule) ToRule() *models.Rule {
+	var rule bytes.Buffer
+	_ = ruleTemplate.Execute(&rule, r)
+	return &models.Rule{
+		Name:        r.Name,
+		Description: r.Description,
+		When:        r.When,
+		Then:        r.Then,
+		Priority:    10,
+		Definition:  rule.String(),
+	}
+}
+
+func NewRuleEditForm(manager *models.DBManager) *extensions.ClearableForm {
 	whenEntry := widget.NewMultiLineEntry()
 	whenEntryFormItem := widget.NewFormItem("When", whenEntry)
 	whenEntryFormItem.HintText = exampleWhen
@@ -48,9 +62,9 @@ func NewRuleEditForm() *extensions.ClearableForm {
 	descriptionFormItem.HintText = exampleRuleDescription
 
 	createRuleForm := widget.NewForm(
-		whenEntryFormItem,
-		descriptionFormItem,
 		ruleNameFormItem,
+		descriptionFormItem,
+		whenEntryFormItem,
 		thenFormEntry,
 	)
 	clearableCreateRuleForm := extensions.NewClearableForm(createRuleForm)
@@ -62,12 +76,10 @@ func NewRuleEditForm() *extensions.ClearableForm {
 			Then:        thenEntry.Text,
 			Priority:    10,
 		}
-		var rule bytes.Buffer
-		err := ruleTemplate.Execute(&rule, rawRule)
-		if err != nil {
-			log.Panicln(err)
-		}
-		log.Println(rule.String())
+
+		rule := rawRule.ToRule()
+		_, err := manager.FindOrCreateRuleFromRule(rule)
+		log.Println(err)
 		clearableCreateRuleForm.Clear()
 	}
 	clearableCreateRuleForm.SubmitText = "Add"

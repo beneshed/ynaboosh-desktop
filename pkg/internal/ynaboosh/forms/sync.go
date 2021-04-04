@@ -10,9 +10,11 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/extensions"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/institutions"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/tables"
 )
 
-func NewSyncTransactionsUploadForm(table *extensions.TransactionTable, window fyne.Window) *extensions.ClearableForm {
+func NewSyncTransactionsUploadForm(table *tables.TransactionTable, manager *models.DBManager, window fyne.Window) *extensions.ClearableForm {
 	var supportedFileTypes []string
 	fileType := binding.NewString()
 	fileSelected := binding.NewString()
@@ -69,7 +71,10 @@ func NewSyncTransactionsUploadForm(table *extensions.TransactionTable, window fy
 		}
 		institution := institutionsMap[fileTypeLookup]
 		transactions := institution.ParseTransactions(fileName)
-		table.AddTransactions(transactions)
+		err = manager.InsertTransactions(transactions)
+		if err == nil {
+			table.AddTransactions(transactions)
+		}
 	}
 	clearableForm.SubmitText = "Load File"
 	return clearableForm
