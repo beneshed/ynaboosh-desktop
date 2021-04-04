@@ -22,12 +22,12 @@ func (i Institution) String() string {
 }
 
 type Transaction struct {
-	DateOfTransaction time.Time `ynab:"Date of Transaction"`
-	Payee             string    `ynab:"Payee"`
+	DateOfTransaction time.Time
+	Payee             string
 	CurrencyCode      string
-	Amount            float32 `ynab:"Amount"`
+	Amount            float32
 	Out               bool
-	Approved          bool `ynab:"Approved"`
+	Approved          bool
 }
 
 func (t Transaction) GetTransactionAsMap() map[string]string {

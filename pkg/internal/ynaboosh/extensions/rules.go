@@ -1,4 +1,4 @@
-package utils
+package extensions
 
 import (
 	"log"
@@ -29,7 +29,7 @@ type RuleList struct {
 	*widget.List
 }
 
-func NewRulesList(ruleEntry *widget.Entry, form *widget.Form) *RuleList {
+func NewRulesList(ruleEntry *widget.Entry, form *clearableForm) *RuleList {
 	state := RuleListState{
 		[]Rule{
 			{

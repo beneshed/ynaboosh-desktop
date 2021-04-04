@@ -1,4 +1,4 @@
-package utils
+package extensions
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/thebenwaters/ynab-utils-desktop/institutions"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/institutions"
 )
 
 type internalTransactionTable struct {

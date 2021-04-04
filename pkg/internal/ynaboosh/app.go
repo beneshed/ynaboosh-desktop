@@ -1,10 +1,10 @@
-package main
+package ynaboosh
 
 import (
 	"log"
 
-	"github.com/thebenwaters/ynab-utils-desktop/institutions"
-	"github.com/thebenwaters/ynab-utils-desktop/utils"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/extensions"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/institutions"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -14,9 +14,9 @@ import (
 
 	_ "embed"
 
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"fyne.io/fyne/v2/storage"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -36,123 +36,7 @@ Transaction.Payee = "Shufersal";`
 	exampleRuleDescription = "Assign grocery category to shufersal and switch to english"
 )
 
-type MappedTableRow struct {
-	Date     string `fyne:"Date of Transaction"`
-	Business string `fyne:"Name of Business"`
-	Amount   string `fyne:"Amount"`
-	Category string `fune:"Category"`
-	Verify   bool   `fyne:"Verify"`
-}
-
-type MappedTableState struct {
-	headers []string
-	data    map[int]MappedTableRow
-}
-
-func NewMappedTableState() *MappedTableState {
-	return &MappedTableState{
-		headers: []string{"Date", "Business", "Amount", "Category", "Verify"},
-		data:    make(map[int]MappedTableRow),
-	}
-}
-
-func (s MappedTableState) Length() (int, int) {
-	return len(s.data) + 1, len(s.headers)
-}
-
-func (s MappedTableState) Init() *fyne.Container {
-	hiddenCheck := widget.NewCheck("", func(b bool) {
-		log.Println("test")
-	})
-	hiddenCheck.Hide()
-	hiddenDropDown := widget.NewSelect([]string{"a", "b", "c"}, func(selected string) {
-		log.Println(selected)
-	})
-	hiddenDropDown.PlaceHolder = " "
-	hiddenDropDown.Hide()
-	return container.NewMax(widget.NewLabel(""), hiddenDropDown, hiddenCheck)
-}
-
-func NewMappedTable() *widget.Table {
-	state := NewMappedTableState()
-	/*
-		state.data[1] = MappedTableRow{
-			Date:     "1/1/1",
-			Business: "Fake Business",
-			Amount:   "100",
-			Category: "",
-			Verify:   false,
-		}
-		state.data[2] = MappedTableRow{
-			Date:     "1/1/1",
-			Business: "Fake Business",
-			Amount:   "100",
-			Category: "",
-			Verify:   false,
-		}
-		state.data[3] = MappedTableRow{
-			Date:     "1/1/1",
-			Business: "Fake Business",
-			Amount:   "100",
-			Category: "",
-			Verify:   false,
-		}
-	*/
-	table := widget.NewTable(func() (int, int) {
-		return state.Length()
-	}, func() fyne.CanvasObject { return state.Init() }, func(location widget.TableCellID, cell fyne.CanvasObject) {
-		c := cell.(*fyne.Container)
-		for _, obj := range c.Objects {
-			switch typedObj := obj.(type) {
-			case *widget.Label:
-				if location.Row == 0 {
-					switch location.Col {
-					case 0:
-						typedObj.SetText("Date")
-					case 1:
-						typedObj.SetText("Business")
-					case 2:
-						typedObj.SetText("Amount")
-					case 3:
-						typedObj.SetText("Category")
-					case 4:
-						typedObj.SetText("Verified")
-					}
-				} else {
-					switch location.Col {
-					case 0:
-						typedObj.SetText(state.data[location.Row].Date)
-					case 1:
-						typedObj.SetText(state.data[location.Row].Business)
-					case 2:
-						typedObj.SetText(state.data[location.Row].Amount)
-					case 3:
-						typedObj.SetText(state.data[location.Row].Category)
-					}
-				}
-			case *widget.Select:
-				if location.Col == len(state.headers)-2 && location.Row != 0 {
-					typedObj.Show()
-				}
-			case *widget.Check:
-				if location.Col == len(state.headers)-1 && location.Row != 0 {
-					typedObj.Show()
-				}
-			}
-		}
-	})
-	table.OnSelected = func(id widget.TableCellID) {
-		if id.Col == len(state.headers)-1 && id.Row == 0 {
-			log.Println("select all")
-		}
-	}
-	for i := 0; i < 5; i++ {
-		table.SetColumnWidth(i, 250)
-	}
-	return table
-}
-
-func main() {
+func CreateWindow() fyne.Window {
 	boundFileSelected = binding.NewString()
 	boundFileSelected.Set("")
 	myApp := app.NewWithID("com.github.thebenwaters.ynaboosh-desktop")
@@ -166,7 +50,7 @@ func main() {
 	db, err := gorm.Open(sqlite.Open(dbPath.Path()), &gorm.Config{})
 	err = InitializeDB(db)
 	log.Println(err)
-	myWindow := myApp.NewWindow("YNABoosh")
+	appWindow := myApp.NewWindow("YNABoosh")
 
 	filePicker := dialog.NewFileOpen(func(info fyne.URIReadCloser, err error) {
 		log.Println(info, err)
@@ -175,9 +59,9 @@ func main() {
 			err = boundFileSelected.Set(info.URI().Path())
 			log.Println(err)
 		}
-	}, myWindow)
+	}, appWindow)
 
-	transactionTable := utils.NewTransactionTable()
+	transactionTable := extensions.NewTransactionTable()
 
 	// sync transactions
 	// 1) form
@@ -202,7 +86,8 @@ func main() {
 			}),
 		),
 	)
-	form.OnSubmit = func() {
+	clearableForm := extensions.NewClearableForm(form)
+	clearableForm.OnSubmit = func() {
 		// run file detection
 		fileName, err := boundFileSelected.Get()
 		if err != nil {
@@ -246,19 +131,18 @@ func main() {
 		widget.NewFormItem("When", whenEntry),
 		widget.NewFormItem("Then", thenEntry),
 	)
-	createRuleForm.OnSubmit = func() {
-		whenEntry.SetText("")
-		thenEntry.SetText("")
+	clearableCreateRuleForm := extensions.NewClearableForm(createRuleForm)
+	clearableCreateRuleForm.OnSubmit = func() {
+		clearableCreateRuleForm.Clear()
 	}
-	createRuleForm.SubmitText = "Add"
-	createRuleForm.OnCancel = func() {
-		createRuleForm.SubmitText = "Add"
-		whenEntry.SetText("")
-		thenEntry.SetText("")
-		createRuleForm.Refresh()
+	clearableCreateRuleForm.SubmitText = "Add"
+	clearableCreateRuleForm.OnCancel = func() {
+		clearableCreateRuleForm.SubmitText = "Add"
+		clearableCreateRuleForm.Clear()
+
 	}
 
-	mappings := container.NewGridWithRows(2, createRuleForm, utils.NewRulesList(whenEntry, createRuleForm))
+	mappings := container.NewGridWithRows(2, createRuleForm, extensions.NewRulesList(whenEntry, clearableCreateRuleForm))
 
 	syncContainer := container.NewBorder(topContainer, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
 
@@ -280,10 +164,8 @@ func main() {
 		container.NewTabItem("Settings", settingsContainer),
 	)
 
-	//tabs.Append(container.NewTabItemWithIcon("Home", theme.HomeIcon(), widget.NewLabel("Home tab")))
-
 	tabs.SetTabLocation(container.TabLocationLeading)
 
-	myWindow.SetContent(tabs)
-	myWindow.ShowAndRun()
+	appWindow.SetContent(tabs)
+	return appWindow
 }
