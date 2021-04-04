@@ -1,6 +1,9 @@
 package utils
 
-import "fyne.io/fyne/v2/widget"
+import 
+(
+	"fyne.io/fyne/v2/widget"
+)
 
 type indexedForm struct {
 	Index map[int]*widget.FormItem

@@ -16,6 +16,10 @@ import (
 
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/storage"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var (
@@ -151,8 +155,18 @@ func NewMappedTable() *widget.Table {
 func main() {
 	boundFileSelected = binding.NewString()
 	boundFileSelected.Set("")
-	myApp := app.New()
-	myWindow := myApp.NewWindow("YNAB Desktop Importer")
+	myApp := app.NewWithID("com.github.thebenwaters.ynaboosh-desktop")
+	myApp.Settings().SetTheme(&hebrewFontTheme{})
+	rootStorage := myApp.Storage().RootURI()
+	log.Println(rootStorage)
+	dbPath, err := storage.Child(rootStorage, "ynaboosh.db")
+	if err != nil {
+		log.Panicln(err)
+	}
+	db, err := gorm.Open(sqlite.Open(dbPath.Path()), &gorm.Config{})
+	err = InitializeDB(db)
+	log.Println(err)
+	myWindow := myApp.NewWindow("YNABoosh")
 
 	filePicker := dialog.NewFileOpen(func(info fyne.URIReadCloser, err error) {
 		log.Println(info, err)

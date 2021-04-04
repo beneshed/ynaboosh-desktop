@@ -9,3 +9,11 @@
 
 [ X ] Cal  
 [ X ] Max  
+
+## How to Run
+
+### Windows
+
+```bash
+go run -buildmode=exe main.go theme.go db.go
+```
