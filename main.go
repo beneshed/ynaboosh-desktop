@@ -25,13 +25,11 @@ var (
 )
 
 const (
-	exampleRule = `rule SpeedUp "When testcar is speeding up we keep increase the speed." salience 10  {
-		when
-			TestCar.SpeedUp == true && TestCar.Speed < TestCar.MaxSpeed
-		then
-			TestCar.Speed = TestCar.Speed + TestCar.SpeedIncrement;
-			DistanceRecord.TotalDistance = DistanceRecord.TotalDistance + TestCar.Speed;
-	}`
+	exampleWhen = `Transaction.Payee.Contains("לסרפוש")`
+	exampleThen = `Transaction.Category = "Groceries";
+Transaction.Payee = "Shufersal";`
+	exampleRuleName        = "Shufersal Groceries"
+	exampleRuleDescription = "Assign grocery category to shufersal and switch to english"
 )
 
 type MappedTableRow struct {
@@ -219,18 +217,34 @@ func main() {
 		transactionTable.ApprovedSetAll(false)
 	})))
 
-	ruleEntry := widget.NewMultiLineEntry()
-	ruleEntry.SetPlaceHolder(exampleRule)
+	whenEntry := widget.NewMultiLineEntry()
+	whenEntry.SetPlaceHolder(exampleWhen)
+	thenEntry := widget.NewMultiLineEntry()
+	thenEntry.SetPlaceHolder(exampleThen)
+	ruleNameEntry := widget.NewEntry()
+	ruleNameEntry.SetPlaceHolder(exampleRuleName)
+	descriptionEntry := widget.NewEntry()
+	descriptionEntry.SetPlaceHolder(exampleRuleDescription)
 
 	createRuleForm := widget.NewForm(
-		widget.NewFormItem("Rule Name", widget.NewEntry()),
-		widget.NewFormItem("Rule", ruleEntry),
+		widget.NewFormItem("Rule Name", ruleNameEntry),
+		widget.NewFormItem("Description", descriptionEntry),
+		widget.NewFormItem("When", whenEntry),
+		widget.NewFormItem("Then", thenEntry),
 	)
 	createRuleForm.OnSubmit = func() {
-		ruleEntry.SetText("")
+		whenEntry.SetText("")
+		thenEntry.SetText("")
+	}
+	createRuleForm.SubmitText = "Add"
+	createRuleForm.OnCancel = func() {
+		createRuleForm.SubmitText = "Add"
+		whenEntry.SetText("")
+		thenEntry.SetText("")
+		createRuleForm.Refresh()
 	}
 
-	mappings := container.NewVBox(createRuleForm, widget.NewSeparator(), widget.NewLabelWithStyle("Rules", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}))
+	mappings := container.NewGridWithRows(2, createRuleForm, utils.NewRulesList(whenEntry, createRuleForm))
 
 	syncContainer := container.NewBorder(topContainer, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
 
