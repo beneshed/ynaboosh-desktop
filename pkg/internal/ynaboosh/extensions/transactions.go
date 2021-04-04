@@ -2,18 +2,22 @@ package extensions
 
 import (
 	"errors"
-	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/institutions"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
+)
+
+const (
+	roundPad = 20
 )
 
 type internalTransactionTable struct {
-	headers []string
-	data    map[int]*institutions.Transaction
+	headers        []string
+	maxHeadersSize []int
+	data           map[int]*models.Transaction
 }
 
 type wrappedUncheckedIcon struct {
@@ -103,15 +107,12 @@ type TransactionTable struct {
 func NewTransactionTable() *TransactionTable {
 
 	internal := internalTransactionTable{
-		data:    make(map[int]*institutions.Transaction),
-		headers: []string{"Date of Transaction", "Payee", "Amount", "Approved"},
+		data:    make(map[int]*models.Transaction),
+		headers: []string{"Date of Transaction", "Payee", "Amount", "Category", "Approved", "Rule Detected"},
 	}
 	table := &TransactionTable{
 		widget.NewTable(internal.Length, internal.createCell, internal.update),
 		internal,
-	}
-	for i := range internal.headers {
-		table.Table.SetColumnWidth(i, 350)
 	}
 	table.Table.OnSelected = table.OnSelected
 	table.ExtendBaseWidget(table)
@@ -119,27 +120,58 @@ func NewTransactionTable() *TransactionTable {
 }
 
 func (t *TransactionTable) OnSelected(id widget.TableCellID) {
-	headers, err := t.internal.getHeaders()
-	if err != nil {
-		log.Panicln("headers shit")
-	}
-	if id.Row > 0 && id.Col == len(headers)-1 {
+	if id.Row > 0 && id.Col == 4 {
 		t.internal.data[id.Row].Approved = !t.internal.data[id.Row].Approved
 		t.Refresh()
 		return
 	}
 }
 
-func (t *TransactionTable) AddTransactions(transactions []institutions.Transaction) {
+func (t *TransactionTable) AddTransactions(transactions []models.Transaction) {
+	var maxDateWidth float32 = fyne.MeasureText(t.internal.headers[0], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxPayeeWidth float32 = fyne.MeasureText(t.internal.headers[1], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxAmountWidth float32 = fyne.MeasureText(t.internal.headers[2], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxCategoryWidth float32 = fyne.MeasureText(t.internal.headers[3], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxRuleDetectedWidth float32 = fyne.MeasureText(t.internal.headers[5], theme.TextSize(), fyne.TextStyle{}).Width
+	var maxApprovedWidth float32 = fyne.MeasureText(t.internal.headers[4], theme.TextSize(), fyne.TextStyle{}).Width
 	lastRow := len(t.internal.data)
 	for i, transaction := range transactions {
+		tMap := transaction.GetTransactionAsMap()
+		dateWidth := fyne.MeasureText(tMap["Date of Transaction"], theme.TextSize(), fyne.TextStyle{})
+		payeeWidth := fyne.MeasureText(tMap["Payee"], theme.TextSize(), fyne.TextStyle{})
+		amountWidth := fyne.MeasureText(tMap["Amount"], theme.TextSize(), fyne.TextStyle{})
+		categoryWidth := fyne.MeasureText(tMap["Category"], theme.TextSize(), fyne.TextStyle{})
+		ruleDetectedWidth := fyne.MeasureText(tMap["Rule Detected"], theme.TextSize(), fyne.TextStyle{})
+		if dateWidth.Width > maxDateWidth {
+			maxDateWidth = dateWidth.Width
+		}
+		if payeeWidth.Width > maxPayeeWidth {
+			maxPayeeWidth = payeeWidth.Width
+		}
+		if amountWidth.Width > maxAmountWidth {
+			maxAmountWidth = amountWidth.Width
+		}
+		if categoryWidth.Width > maxCategoryWidth {
+			maxCategoryWidth = categoryWidth.Width
+		}
+		if ruleDetectedWidth.Width > maxRuleDetectedWidth {
+			maxRuleDetectedWidth = ruleDetectedWidth.Width
+		}
 		transactionPtr := transaction
 		t.internal.data[lastRow+i] = &transactionPtr
 	}
+	t.Table.SetColumnWidth(0, maxDateWidth+roundPad)
+	t.Table.SetColumnWidth(1, maxPayeeWidth+roundPad)
+	t.Table.SetColumnWidth(2, maxAmountWidth+roundPad)
+	t.Table.SetColumnWidth(3, maxCategoryWidth+roundPad)
+	t.Table.SetColumnWidth(4, maxApprovedWidth+roundPad)
+	t.Table.SetColumnWidth(5, maxRuleDetectedWidth+roundPad)
+	t.Table.Refresh()
 }
 
 func (t *TransactionTable) ApprovedSetAll(approved bool) {
 	for _, transaction := range t.internal.data {
 		transaction.Approved = approved
 	}
+	t.Table.Refresh()
 }

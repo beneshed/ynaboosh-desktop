@@ -1,8 +1,8 @@
 package ynaboosh
 
 import (
-	"gorm.io/gorm"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
+	"gorm.io/gorm"
 )
 
 func InitializeDB(db *gorm.DB) error {

@@ -29,7 +29,7 @@ type RuleList struct {
 	*widget.List
 }
 
-func NewRulesList(ruleEntry *widget.Entry, form *clearableForm) *RuleList {
+func NewRulesList(form *ClearableForm) *RuleList {
 	state := RuleListState{
 		[]Rule{
 			{
@@ -79,7 +79,7 @@ func NewRulesList(ruleEntry *widget.Entry, form *clearableForm) *RuleList {
 	rulesList.ExtendBaseWidget(rulesList)
 	rulesList.OnSelected = func(i widget.ListItemID) {
 		log.Println("selected")
-		ruleEntry.SetText(state.Rules[i].Value)
+		//ruleEntry.SetText(state.Rules[i].Value)
 		form.SubmitText = "Update"
 		form.Refresh()
 	}

@@ -6,10 +6,26 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
-func ParseDiscountTransactions(fileName string, isHebrew bool) []Transaction {
-	var transactions []Transaction
+const (
+	discountBankDisplayName = "Discount - Bank"
+	discountBank            = "DISCOUNT"
+)
+
+type Discount struct{}
+
+func (i Discount) Name() string {
+	return discountBank
+}
+
+func (i Discount) DisplayName() string {
+	return discountBankDisplayName
+}
+
+func (i Discount) ParseTransactions(fileName string) []models.Transaction {
+	var transactions []models.Transaction
 	f, err := excelize.OpenFile(fileName)
 	if err != nil {
 		log.Panicln(err)
@@ -38,7 +54,7 @@ func ParseDiscountTransactions(fileName string, isHebrew bool) []Transaction {
 			if amountDecimalWrapped < 0.0 {
 				postiveAmount = amountDecimalWrapped * -1.0
 			}
-			transactions = append(transactions, Transaction{
+			transactions = append(transactions, models.Transaction{
 				DateOfTransaction: parseSlashedDate(row[0], &weirdDate, false),
 				Payee:             payee,
 				Amount:            postiveAmount,

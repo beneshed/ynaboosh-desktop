@@ -8,9 +8,27 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 )
+
+const (
+	calCard            = "CAL"
+	calCardDisplayName = "Cal - Credit Card"
+)
+
+type Cal struct {
+	name string
+}
+
+func (i Cal) Name() string {
+	return calCard
+}
+
+func (i Cal) DisplayName() string {
+	return calCardDisplayName
+}
 
 func detectHebrew(s string) bool {
 	words := regexp.MustCompile("[\u0590-\u05fe]+")
@@ -45,7 +63,7 @@ func reverse(s string) string {
 	return string(rns)
 }
 
-func ParseCalTransations(fileName string) []Transaction {
+func (i Cal) ParseTransactions(fileName string) []models.Transaction {
 	filesBytes, _ := ioutil.ReadFile(fileName)
 	dec := unicode.UTF16(unicode.LittleEndian, unicode.UseBOM).NewDecoder()
 	utf16r := bytes.NewReader(filesBytes)
@@ -60,14 +78,13 @@ func ParseCalTransations(fileName string) []Transaction {
 	}
 	headers := r[2]
 	data := r[3 : len(r)-1]
-	var transactions []Transaction
+	var transactions []models.Transaction
 	headersMap := make(map[int]string)
 	for index, h := range headers {
 		headersMap[index] = reverse(h)
 	}
-	log.Println(headersMap)
 	for _, entry := range data {
-		transaction := NewTransation()
+		transaction := models.Transaction{}
 		for index, col := range entry {
 			switch index {
 			case 0:
@@ -81,14 +98,14 @@ func ParseCalTransations(fileName string) []Transaction {
 			case 3:
 				value := grabAmount(col)
 				if detectShekel(col) {
-					transaction.CurrencyCode = nis
+					transaction.CurrencyCode = "nis"
 				} else {
-					transaction.CurrencyCode = usd
+					transaction.CurrencyCode = "usd"
 				}
 				transaction.Amount = value
 			}
 		}
-		transactions = append(transactions, *transaction)
+		transactions = append(transactions, transaction)
 	}
 	return transactions
 }

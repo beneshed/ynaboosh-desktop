@@ -7,7 +7,23 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
+
+const (
+	maxCard            = "MAX"
+	maxCardDisplayName = "Max - Credit Card"
+)
+
+type Max struct{}
+
+func (m Max) Name() string {
+	return maxCard
+}
+
+func (m Max) DisplayName() string {
+	return maxCardDisplayName
+}
 
 func parseMaxDate(date string) time.Time {
 	dateParsed := strings.Split(date, "-")
@@ -17,8 +33,8 @@ func parseMaxDate(date string) time.Time {
 	return time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 }
 
-func parseSheet(f *excelize.File, sheetName string) []Transaction {
-	var transactions []Transaction
+func parseSheet(f *excelize.File, sheetName string) []models.Transaction {
+	var transactions []models.Transaction
 	rows, err := f.GetRows(sheetName)
 	if err != nil {
 		log.Println(err)
@@ -40,7 +56,7 @@ func parseSheet(f *excelize.File, sheetName string) []Transaction {
 			if amountDecimalWrapped < 0.0 {
 				postiveAmount = amountDecimalWrapped * -1.0
 			}
-			transactions = append(transactions, Transaction{
+			transactions = append(transactions, models.Transaction{
 				DateOfTransaction: parseMaxDate(row[0]),
 				Payee:             payee,
 				Amount:            postiveAmount,
@@ -51,8 +67,8 @@ func parseSheet(f *excelize.File, sheetName string) []Transaction {
 	return transactions
 }
 
-func ParseMaxTransations(fileName string) []Transaction {
-	var transactions []Transaction
+func (m Max) ParseTransactions(fileName string) []models.Transaction {
+	var transactions []models.Transaction
 	f, err := excelize.OpenFile(fileName)
 	if err != nil {
 		log.Panicln(err)

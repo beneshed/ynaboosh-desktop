@@ -1,47 +1,17 @@
 package institutions
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
-type Institution int
-
-const (
-	nis               = "₪"
-	usd               = "$"
-	CalHE Institution = iota
-	DiscountEN
-	DiscountHE
-)
-
-func (i Institution) String() string {
-	return [...]string{"CalHE", "DiscountEN", "DiscountHE"}[i]
-}
-
-type Transaction struct {
-	DateOfTransaction time.Time
-	Payee             string
-	CurrencyCode      string
-	Amount            float32
-	Out               bool
-	Approved          bool
-}
-
-func (t Transaction) GetTransactionAsMap() map[string]string {
-	return map[string]string{
-		"Date of Transaction": t.DateOfTransaction.Format("January 2, 2006"),
-		"Payee":               t.Payee,
-		"Amount":              fmt.Sprintf("%.2f", t.Amount),
-		//"Approved":            strconv.FormatBool(t.Approved),
-		"Approved": "",
-	}
-}
-
-func NewTransation() *Transaction {
-	return &Transaction{}
+type Institution interface {
+	ParseTransactions(fileName string) []models.Transaction
+	Name() string
+	DisplayName() string
 }
 
 func parseSlashedDate(date string, seperator *string, isInternational bool) time.Time {
@@ -62,4 +32,13 @@ func parseSlashedDate(date string, seperator *string, isInternational bool) time
 
 	year, _ := strconv.Atoi(strings.TrimSpace(dateParsed[2]))
 	return time.Date(year+2000, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+}
+
+func LookupInstitutions() map[string]Institution {
+	return map[string]Institution{
+		discountBank: Discount{},
+		leumiBank:    Leumi{},
+		calCard:      Cal{},
+		maxCard:      Max{},
+	}
 }

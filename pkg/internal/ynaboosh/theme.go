@@ -1,7 +1,6 @@
 package ynaboosh
 
-import 
-(
+import (
 	_ "embed"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
@@ -15,7 +14,7 @@ var (
 	hebrewFontBlack []byte
 )
 
-type hebrewFontTheme struct {}
+type hebrewFontTheme struct{}
 
 func (t hebrewFontTheme) Font(_ fyne.TextStyle) fyne.Resource {
 	font := fyne.NewStaticResource("font", hebrewFontBlack)

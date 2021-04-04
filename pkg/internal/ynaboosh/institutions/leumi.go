@@ -8,14 +8,26 @@ import (
 	"strings"
 
 	"github.com/antchfx/htmlquery"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
 const (
-	leumiTableXPath = `//*[@id="ctlActivityTable"]//tr//td`
-	// `//*[@id="ctlActivityTable"]/tbody/tr[1]/th[1]/a/span`
+	leumiTableXPath      = `//*[@id="ctlActivityTable"]//tr//td`
+	leumiBank            = "LEUMI"
+	leumiBankDisplayName = "Leumi - Bank"
 )
 
-func ParseLeumiTransactions(fileName string) []Transaction {
+type Leumi struct{}
+
+func (i Leumi) Name() string {
+	return leumiBank
+}
+
+func (i Leumi) DisplayName() string {
+	return leumiBankDisplayName
+}
+
+func (i Leumi) ParseTransactions(fileName string) []models.Transaction {
 	fileBytes, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		log.Panicln(err)
@@ -28,7 +40,7 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 	if err != nil {
 		log.Println(err)
 	}
-	var transactions []Transaction
+	var transactions []models.Transaction
 	for i := 0; i < len(results); i += 6 {
 		date := parseSlashedDate(htmlquery.InnerText(results[i]), nil, true)
 		payee := strings.TrimSpace(htmlquery.InnerText(results[i+1]))
@@ -41,10 +53,10 @@ func ParseLeumiTransactions(fileName string) []Transaction {
 		if out > 0 {
 			isOut = true
 		}
-		transactions = append(transactions, Transaction{
+		transactions = append(transactions, models.Transaction{
 			DateOfTransaction: date,
 			Payee:             payee,
-			CurrencyCode:      nis,
+			CurrencyCode:      "nis",
 			Amount:            float32(math.Max(out, in)),
 			Out:               isOut,
 		})
