@@ -22,6 +22,7 @@ func InitializeDB(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+	err = db.AutoMigrate(&models.RawRule{})
 
 	return nil
 }

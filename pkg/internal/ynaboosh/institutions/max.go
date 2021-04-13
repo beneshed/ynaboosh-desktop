@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/language"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
@@ -50,6 +51,7 @@ func parseSheet(f *excelize.File, sheetName string) []models.Transaction {
 			}
 			payee := row[1]
 			reversedPayee := ""
+			log.Println(language.ReverseHebrew(payee))
 			if detectHebrew(payee) {
 				reversedPayee = payee
 				payee = reverse(payee)

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/language"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 )
 
@@ -48,10 +49,7 @@ func (i Discount) ParseTransactions(fileName string) []models.Transaction {
 			}
 			payee := row[2]
 			reversedPayee := ""
-			if detectHebrew(payee) {
-				reversedPayee = payee
-				payee = reverse(payee)
-			}
+			payee = language.ReverseHebrew(payee)
 			postiveAmount := amountDecimalWrapped
 			if amountDecimalWrapped < 0.0 {
 				postiveAmount = amountDecimalWrapped * -1.0

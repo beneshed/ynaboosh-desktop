@@ -1,0 +1,12 @@
+[
+    {
+        "name": "ShufersalGroceries",
+        "desc": "If payee is shufersal in hebrew, reassign to english. Set category to Groceries",
+        "salience": 10,
+        "when": "Transaction.Payee.Contains(\"שופרסל\")",
+        "then": [
+            "Transaction.Payee = \"Shufersal\"",
+            "Transaction.Category = \"Groceries\""
+        ]
+    }
+]

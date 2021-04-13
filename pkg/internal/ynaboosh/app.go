@@ -52,9 +52,16 @@ func CreateWindow() fyne.Window {
 	})))
 	editRulesForm := forms.NewRuleEditForm(manager)
 
-	mappings := container.NewGridWithRows(2, editRulesForm, tables.NewRulesTable(editRulesForm, manager))
+	editRulesFormContainer := container.NewVBox(editRulesForm, widget.NewButton("Fix RTL Lanuages", func() {}))
 
-	syncContainer := container.NewBorder(topContainer, widget.NewButton("Submit to YNAB", func() {}), nil, nil, transactionTable)
+	rulesTable := tables.NewRulesTable(editRulesForm, manager)
+
+	mappings := container.NewGridWithRows(2, editRulesFormContainer, rulesTable)
+
+	submitButton := widget.NewButton("Submit to YNAB", func() {})
+	submitButton.Importance = widget.HighImportance
+
+	syncContainer := container.NewBorder(topContainer, submitButton, nil, nil, transactionTable)
 
 	settingsContainer := container.NewVBox(
 		widget.NewButton("Login to YNAB", func() {
@@ -77,6 +84,10 @@ func CreateWindow() fyne.Window {
 
 	tabs.SetTabLocation(container.TabLocationLeading)
 
+	// menu
+	mainMenu := fyne.NewMainMenu(fyne.NewMenu("File", fyne.NewMenuItem("Import Rules", rulesTable.ImportRules)))
+
 	appWindow.SetContent(tabs)
+	appWindow.SetMainMenu(mainMenu)
 	return appWindow
 }

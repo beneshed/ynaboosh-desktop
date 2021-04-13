@@ -1,5 +1,12 @@
 package models
 
+import (
+	"encoding/json"
+	"log"
+
+	grule "github.com/hyperjumptech/grule-rule-engine/pkg"
+)
+
 type Rule struct {
 	Name        string `gorm:"unique"`
 	Description string
@@ -8,6 +15,12 @@ type Rule struct {
 	Then        string
 	Priority    int64 `gorm:"default:10"`
 	Model
+}
+
+type RawRule struct {
+	Name    string `gorm:"unique"`
+	Body    string
+	Version string
 }
 
 func (db *DBManager) FindOrCreateRule(name string, description string, definition string, when string, then string, priority *int64) (*Rule, error) {
@@ -47,4 +60,18 @@ func (db *DBManager) Rules() []Rule {
 	var rules []Rule
 	_ = db.Find(&rules)
 	return rules
+}
+
+func (db *DBManager) InsertRawRules(rules []grule.GruleJSON) {
+	var rawRules []RawRule
+	for _, rule := range rules {
+		rawRuleBytes, _ := json.Marshal(rule)
+		rawRules = append(rawRules, RawRule{
+			Name:    rule.Name,
+			Body:    string(rawRuleBytes),
+			Version: "0.0.1",
+		})
+	}
+	result := db.Create(rawRules)
+	log.Println(result)
 }

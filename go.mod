@@ -6,6 +6,7 @@ require (
 	fyne.io/fyne/v2 v2.0.2
 	github.com/360EntSecGroup-Skylar/excelize/v2 v2.3.2
 	github.com/antchfx/htmlquery v1.2.3
+	github.com/hyperjumptech/grule-rule-engine v1.8.3
 	github.com/labstack/echo/v4 v4.2.1
 	github.com/pkg/browser v0.0.0-20210115035449-ce105d075bb4
 	go.bmvs.io/ynab v1.3.0
