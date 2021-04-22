@@ -74,12 +74,12 @@ func (r *RuleTable) WrapTableWidth() {
 
 type internalRulesTable struct {
 	headers []string
-	data    map[int]*models.Rule
+	data    map[int]*models.RawRule
 	db      models.DBManager
 }
 
 func (r *internalRulesTable) Update(i widget.TableCellID, o fyne.CanvasObject) {
-	log.Println(i.Row, i.Col, r.data)
+	var rule models.Rule
 	if i.Row == 0 {
 		if i.Col == 0 {
 			o.(*widget.Label).SetText("Name")
@@ -87,11 +87,18 @@ func (r *internalRulesTable) Update(i widget.TableCellID, o fyne.CanvasObject) {
 			o.(*widget.Label).SetText("Description")
 		}
 	} else {
-		if i.Col == 0 {
-			o.(*widget.Label).SetText(r.data[i.Row].Name)
-		} else {
-			o.(*widget.Label).SetText(r.data[i.Row].Description)
+		if r.data[i.Row] != nil {
+			err := json.Unmarshal([]byte(r.data[i.Row].Body), &rule)
+			if err != nil {
+				log.Println(err)
+			}
+			if i.Col == 0 {
+				o.(*widget.Label).SetText(rule.Name)
+			} else {
+				o.(*widget.Label).SetText(rule.Description)
+			}
 		}
+
 	}
 
 }
@@ -104,9 +111,8 @@ func (r *internalRulesTable) Length() (int, int) {
 }
 
 func NewRulesTable(form *extensions.ClearableForm, manager *models.DBManager) *RuleTable {
-	initialState := manager.Rules()
-	log.Println(initialState)
-	initialMap := make(map[int]*models.Rule)
+	initialState := manager.RawRules()
+	initialMap := make(map[int]*models.RawRule)
 	for i, rule := range initialState {
 		initialMap[i] = &rule
 	}

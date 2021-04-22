@@ -8,12 +8,11 @@ import (
 )
 
 type Rule struct {
-	Name        string `gorm:"unique"`
-	Description string
-	Definition  string
-	When        string
-	Then        string
-	Priority    int64 `gorm:"default:10"`
+	Name        string `gorm:"unique" json:"name"`
+	Description string `json:"desc"`
+	When        string `json:"when"`
+	Then        string `json:"then"`
+	Priority    int64  `gorm:"default:10" json:"salience"`
 	Model
 }
 
@@ -21,13 +20,13 @@ type RawRule struct {
 	Name    string `gorm:"unique"`
 	Body    string
 	Version string
+	Model
 }
 
 func (db *DBManager) FindOrCreateRule(name string, description string, definition string, when string, then string, priority *int64) (*Rule, error) {
 	rule := &Rule{
 		Name:        name,
 		Description: description,
-		Definition:  definition,
 		When:        when,
 		Then:        then,
 		Priority:    10,
@@ -60,6 +59,12 @@ func (db *DBManager) Rules() []Rule {
 	var rules []Rule
 	_ = db.Find(&rules)
 	return rules
+}
+
+func (db *DBManager) RawRules() []RawRule {
+	var rawRules []RawRule
+	_ = db.Find(&rawRules)
+	return rawRules
 }
 
 func (db *DBManager) InsertRawRules(rules []grule.GruleJSON) {

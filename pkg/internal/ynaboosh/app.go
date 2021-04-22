@@ -1,8 +1,6 @@
 package ynaboosh
 
 import (
-	"log"
-
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/forms"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/models"
 	"github.com/thebenwaters/ynaboosh-desktop/pkg/internal/ynaboosh/tables"
@@ -20,6 +18,8 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"go.uber.org/zap"
+
 	externalYnab "go.bmvs.io/ynab"
 )
 
@@ -27,19 +27,26 @@ var (
 	externalYNABClient externalYnab.ClientServicer
 )
 
-func CreateWindow() fyne.Window {
+func CreateWindow() (fyne.Window, error) {
+	logger, _ := zap.NewProduction()
+	defer logger.Sync() // flushes buffer, if any
+	sugar := logger.Sugar()
 	myApp := app.NewWithID("com.github.thebenwaters.ynaboosh-desktop")
 	myApp.Settings().SetTheme(&hebrewFontTheme{})
 	rootStorage := myApp.Storage().RootURI()
-	log.Println(rootStorage)
+	sugar.Infof("Storage root: %s", rootStorage)
 	dbPath, err := storage.Child(rootStorage, "ynaboosh.db")
 	if err != nil {
-		log.Panicln(err)
+		sugar.Error(err)
+		return nil, err
 	}
 	db, _ := gorm.Open(sqlite.Open(dbPath.Path()), &gorm.Config{})
 	manager := &models.DBManager{db}
 	err = InitializeDB(db)
-	log.Println(err)
+	if err != nil {
+		sugar.Error(err)
+		return nil, err
+	}
 	appWindow := myApp.NewWindow("YNABoosh")
 	transactionTable := tables.NewTransactionTable()
 	transactionTable.WrapTableWidth()
@@ -68,10 +75,10 @@ func CreateWindow() fyne.Window {
 			externalYNABClient = ynab.Login(*manager)
 		}),
 		widget.NewButton("Logout of YNAB", func() {
-			log.Println("tapped")
+
 		}),
 		widget.NewButton("Refresh YNAB Data", func() {
-			log.Println("refreshed")
+
 		}),
 	)
 
@@ -89,5 +96,5 @@ func CreateWindow() fyne.Window {
 
 	appWindow.SetContent(tabs)
 	appWindow.SetMainMenu(mainMenu)
-	return appWindow
+	return appWindow, nil
 }

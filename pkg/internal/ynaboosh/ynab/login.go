@@ -41,6 +41,7 @@ const (
 	</body>
 	</html>
 	`
+	authorizeURL = "https://app.youneedabudget.com/oauth/authorize?"
 )
 
 var (
@@ -50,7 +51,7 @@ var (
 )
 
 func Login(manager models.DBManager) externalYnab.ClientServicer {
-	urlToOpen := fmt.Sprintf("https://app.youneedabudget.com/oauth/authorize?client_id=%s&redirect_uri=%s&response_type=token", oauthClientID, redirectURL)
+	urlToOpen := fmt.Sprintf("%sclient_id=%s&redirect_uri=%s&response_type=token", authorizeURL, oauthClientID, redirectURL)
 	ctx, cancel := context.WithCancel(context.Background())
 	e := echo.New()
 	e.HideBanner = true

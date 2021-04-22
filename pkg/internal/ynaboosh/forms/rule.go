@@ -43,7 +43,6 @@ func (r RawRule) ToRule() *models.Rule {
 		When:        r.When,
 		Then:        r.Then,
 		Priority:    10,
-		Definition:  rule.String(),
 	}
 }
 
